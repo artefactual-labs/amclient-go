@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goarch: amd64
+          - goarch: amd64
+            testflags: "-race"
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod/cache
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-
+      - name: Test all
+        run: go test ${{matrix.testflags}} ./...
+        env:
+          GOARCH: ${{ matrix.goarch }}
+  apidiff:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod/cache
+          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}
+            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-
+      - name: Run api-diff
+        uses: joelanford/go-apidiff@main
