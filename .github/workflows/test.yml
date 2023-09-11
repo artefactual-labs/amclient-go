@@ -21,16 +21,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Restore cache
-        uses: actions/cache@v3
+      - name: Install Go
+        uses: actions/setup-go@v4
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod/cache
-          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}-${{ github.run_id }}
-          restore-keys: |
-            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}
-            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-
+          go-version-file: go.mod
       - name: Test all
         run: go test ${{matrix.testflags}} ./...
         env:
@@ -43,15 +37,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Restore cache
-        uses: actions/cache@v3
+      - name: Install Go
+        uses: actions/setup-go@v4
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod/cache
-          key: ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}-${{ github.run_id }}
-          restore-keys: |
-            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-${{ hashFiles('**/go.sum') }}
-            ${{ github.job }}-${{ runner.os }}-${{ matrix.goarch }}-${{ matrix.testflags }}-go-
+          go-version-file: go.mod
       - name: Run api-diff
         uses: joelanford/go-apidiff@main
