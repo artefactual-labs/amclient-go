@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 var (
@@ -147,4 +149,31 @@ func TestNewRequestJSON(t *testing.T) {
 	if !bytes.Equal(got, want) {
 		t.Fatalf("NewRequest() Body, got: %s, want %s", got, want)
 	}
+}
+
+func TestAddOption(t *testing.T) {
+	var (
+		rawURL = "http://127.0.0.1:12345"
+		err    error
+	)
+
+	// It can set a query parameter.
+	rawURL, err = addOption(rawURL, "param1", "1")
+	assert.NilError(t, err)
+	assert.Equal(t, rawURL, "http://127.0.0.1:12345?param1=1")
+
+	// It can overwrite a query parameter.
+	rawURL, err = addOption(rawURL, "param1", "2")
+	assert.NilError(t, err)
+	assert.Equal(t, rawURL, "http://127.0.0.1:12345?param1=2")
+
+	// It can append an additional query parameter.
+	rawURL, err = addOption(rawURL, "param2", "a")
+	assert.NilError(t, err)
+	assert.Equal(t, rawURL, "http://127.0.0.1:12345?param1=2&param2=a")
+
+	// It can set an empty string as a query parameter.
+	rawURL, err = addOption(rawURL, "param3", "")
+	assert.NilError(t, err)
+	assert.Equal(t, rawURL, "http://127.0.0.1:12345?param1=2&param2=a&param3=")
 }

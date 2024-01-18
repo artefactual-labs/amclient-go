@@ -36,10 +36,10 @@ func (m *MockTaskService) EXPECT() *MockTaskServiceMockRecorder {
 }
 
 // Read mocks base method.
-func (m *MockTaskService) Read(arg0 context.Context, arg1 string) (*amclient.TaskDetailed, *amclient.Response, error) {
+func (m *MockTaskService) Read(arg0 context.Context, arg1 string) (*amclient.Task, *amclient.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Read", arg0, arg1)
-	ret0, _ := ret[0].(*amclient.TaskDetailed)
+	ret0, _ := ret[0].(*amclient.Task)
 	ret1, _ := ret[1].(*amclient.Response)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -58,19 +58,19 @@ type TaskServiceReadCall struct {
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *TaskServiceReadCall) Return(arg0 *amclient.TaskDetailed, arg1 *amclient.Response, arg2 error) *TaskServiceReadCall {
+func (c *TaskServiceReadCall) Return(arg0 *amclient.Task, arg1 *amclient.Response, arg2 error) *TaskServiceReadCall {
 	c.Call = c.Call.Return(arg0, arg1, arg2)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *TaskServiceReadCall) Do(f func(context.Context, string) (*amclient.TaskDetailed, *amclient.Response, error)) *TaskServiceReadCall {
+func (c *TaskServiceReadCall) Do(f func(context.Context, string) (*amclient.Task, *amclient.Response, error)) *TaskServiceReadCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *TaskServiceReadCall) DoAndReturn(f func(context.Context, string) (*amclient.TaskDetailed, *amclient.Response, error)) *TaskServiceReadCall {
+func (c *TaskServiceReadCall) DoAndReturn(f func(context.Context, string) (*amclient.Task, *amclient.Response, error)) *TaskServiceReadCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

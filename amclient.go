@@ -212,6 +212,20 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 	return response, err
 }
 
+func addOption(rawURL, key, value string) (string, error) {
+	origURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+
+	queryValues := origURL.Query()
+	queryValues.Set(key, value)
+
+	origURL.RawQuery = queryValues.Encode()
+
+	return origURL.String(), nil
+}
+
 // CheckResponse checks the API response for errors, and returns them if
 // present. A response is considered an error if it has a status code outside
 // the 200 range. API error responses are expected to have either no response
