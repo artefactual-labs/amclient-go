@@ -23,6 +23,11 @@ type JobsListRequest struct {
 	Microservice string `json:"microservice,omitempty"`
 	LinkID       string `json:"link_uuid,omitempty"`
 	Name         string `json:"name,omitempty"`
+
+	// Detailed instructs the server to return additional data in the response.
+	// This feature is available starting from Archivematica 1.16, which was not
+	// released at the time this comment was written.
+	Detailed bool `json:"-"`
 }
 
 type Job struct {
@@ -79,13 +84,16 @@ func (s *JobStatus) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type Task struct {
-	ID       string `json:"uuid"`
-	ExitCode uint8  `json:"exit_code"`
-}
-
 func (s *JobsServiceOp) List(ctx context.Context, ID string, r *JobsListRequest) ([]Job, *Response, error) {
 	path := fmt.Sprintf("%s/%s", jobsBasePath, ID)
+
+	if r.Detailed {
+		var err error
+		path, err = addOption(path, "detailed", "")
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
 	req, err := s.client.NewRequestJSON(ctx, "GET", path, r)
 	if err != nil {
