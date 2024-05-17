@@ -13,7 +13,7 @@ SHELL := /usr/bin/env bash -o pipefail
 MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-print-directory
 
-MOCKGEN_VERSION ?= 0.2.0
+MOCKGEN_VERSION ?= 0.4.0
 MOCKGEN := $(CACHE_VERSIONS)/mockgen/$(MOCKGEN_VERSION)
 $(MOCKGEN):
 	@rm -f $(CACHE_BIN)/mockgen
