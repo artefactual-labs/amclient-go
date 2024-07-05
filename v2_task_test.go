@@ -53,12 +53,16 @@ func TestTaskDateTimeUnmarshalJSON(t *testing.T) {
 			input:    `"2006-01-02T15:04:05"`,
 			expected: TaskDateTime{Time: time.Date(2006, time.January, 2, 15, 4, 5, 0, time.UTC)},
 		},
+		"Null": {
+			input:    `null`,
+			expected: TaskDateTime{},
+		},
 		"Unexpected format": {
 			input:     `"2006-01-02T15:04:05Z"`,
 			expectErr: true,
 		},
 		"Empty string": {
-			input:     `"2006-01-02T15:04:05Z"`,
+			input:     `""`,
 			expectErr: true,
 		},
 	}
@@ -111,6 +115,10 @@ func TestTaskDurationUnmarshalJSON(t *testing.T) {
 		},
 		"Invalid integer (too big)": {
 			input:     `123456789012345678901234567890123456789`,
+			expectErr: true,
+		},
+		"Null": {
+			input:     `null`,
 			expectErr: true,
 		},
 	}
