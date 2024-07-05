@@ -25,15 +25,21 @@ type TaskDateTime struct {
 }
 
 func (t *TaskDateTime) UnmarshalJSON(data []byte) error {
-	s := string(data)
-	s = s[1 : len(s)-1]
+	if bytes.Equal(data, []byte("null")) {
+		t.Time = time.Time{}
+		return nil
+	}
+
+	s := string(bytes.Trim(data, `"`))
+
 	const layout = "2006-01-02T15:04:05"
 	td, err := time.Parse(layout, s)
 	if err != nil {
 		return err
 	}
+
 	t.Time = td
-	return err
+	return nil
 }
 
 // TaskDuration extends the standard time.Duration type to provide specialized
@@ -52,14 +58,16 @@ func (t *TaskDateTime) UnmarshalJSON(data []byte) error {
 type TaskDuration time.Duration
 
 func (d *TaskDuration) UnmarshalJSON(data []byte) error {
+	unquoted := bytes.Trim(data, `"`)
+
 	// Check for the special "< 1" case.
-	if bytes.Equal(data, []byte("\"< 1\"")) {
+	if bytes.Equal(unquoted, []byte("< 1")) {
 		*d = TaskDuration(time.Second / 2)
 		return nil
 	}
 
 	// Check for the empty string case.
-	if bytes.Equal(data, []byte("\"\"")) {
+	if len(unquoted) == 0 {
 		*d = TaskDuration(0)
 		return nil
 	}
