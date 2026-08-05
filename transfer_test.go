@@ -36,16 +36,20 @@ func TestTransfer_Approve(t *testing.T) {
 
 	mux.HandleFunc("/api/transfer/approve/", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
+		assert.NilError(t, r.ParseForm())
+		assert.Equal(t, r.Form.Get("directory"), "Foobar")
 		fmt.Fprint(w, `{"message": "Approval successful.", "uuid": "eaedbee3-2b02-4e40-baa0-3ef92c5fd17e"}`)
 	})
 
-	payload, _, err := client.Transfer.Approve(ctx, &TransferApproveRequest{
-		Directory: "Foobar",
+	req := &TransferApproveRequest{
+		Directory: "/var/archivematica/Foobar",
 		Type:      "standard",
-	})
+	}
+	payload, _, err := client.Transfer.Approve(ctx, req)
 	if err != nil {
 		t.Errorf("Transfer.Approve returned error: %v", err)
 	}
+	assert.Equal(t, req.Directory, "/var/archivematica/Foobar")
 	if want, got := "Approval successful.", payload.Message; want != got {
 		t.Errorf("Transfer.Approve(): Message = %v, want %v", got, want)
 	}

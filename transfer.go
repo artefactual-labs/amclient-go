@@ -72,8 +72,9 @@ type TransferApproveResponse struct {
 func (s *TransferServiceOp) Approve(ctx context.Context, r *TransferApproveRequest) (*TransferApproveResponse, *Response, error) {
 	path := fmt.Sprintf("%s/approve/", transferBasePath)
 
-	r.Directory = filepath.Base(r.Directory) // We only need its base directory.
-	req, err := s.client.NewRequest(ctx, "POST", path, r)
+	request := *r
+	request.Directory = filepath.Base(r.Directory) // We only need its base directory.
+	req, err := s.client.NewRequest(ctx, "POST", path, &request)
 	if err != nil {
 		return nil, nil, err
 	}
