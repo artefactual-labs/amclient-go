@@ -26,7 +26,7 @@ type PackageCreateRequest struct {
 	AccessSystemID   string `json:"access_system_id,omitempty"`
 	MetadataSetID    string `json:"metadata_set_id,omitempty"`
 	ProcessingConfig string `json:"processing_config,omitempty"`
-	AutoApprove      bool   `json:"auto_approve,omitempty"`
+	AutoApprove      *bool  `json:"auto_approve,omitempty"`
 	IdempotencyKey   string `json:"-"`
 }
 
