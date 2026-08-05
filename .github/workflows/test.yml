@@ -13,22 +13,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - goarch: amd64
-          - goarch: amd64
-            testflags: "-race"
-    runs-on: ubuntu-22.04
+        gover:
+          - "1.25.x"
+          - "1.26.x"
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version: ${{ matrix.gover }}
       - name: Test all
-        run: go test ${{matrix.testflags}} ./...
-        env:
-          GOARCH: ${{ matrix.goarch }}
+        run: go test -race ./...
   apidiff:
     if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'breaking-change')
     runs-on: ubuntu-24.04
