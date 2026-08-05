@@ -22,12 +22,8 @@ func TestTransfer_Start(t *testing.T) {
 		Paths: []string{"a.jpg", "b.jpg"},
 		Type:  "standard",
 	})
-	if err != nil {
-		t.Errorf("Transfer.Start returned error: %v", err)
-	}
-	if want, got := "Copy successful", payload.Message; want != got {
-		t.Errorf("Transfer.Start(): Message = %v, want %v", got, want)
-	}
+	assert.NilError(t, err)
+	assert.Equal(t, payload.Message, "Copy successful")
 }
 
 func TestTransfer_Approve(t *testing.T) {
@@ -46,16 +42,10 @@ func TestTransfer_Approve(t *testing.T) {
 		Type:      "standard",
 	}
 	payload, _, err := client.Transfer.Approve(ctx, req)
-	if err != nil {
-		t.Errorf("Transfer.Approve returned error: %v", err)
-	}
+	assert.NilError(t, err)
 	assert.Equal(t, req.Directory, "/var/archivematica/Foobar")
-	if want, got := "Approval successful.", payload.Message; want != got {
-		t.Errorf("Transfer.Approve(): Message = %v, want %v", got, want)
-	}
-	if want, got := "eaedbee3-2b02-4e40-baa0-3ef92c5fd17e", payload.UUID; want != got {
-		t.Errorf("Transfer.Approve(): UUID = %v, want %v", got, want)
-	}
+	assert.Equal(t, payload.Message, "Approval successful.")
+	assert.Equal(t, payload.UUID, "eaedbee3-2b02-4e40-baa0-3ef92c5fd17e")
 }
 
 func TestTransfer_Unapproved(t *testing.T) {
@@ -82,12 +72,8 @@ func TestTransfer_Unapproved(t *testing.T) {
 	})
 
 	payload, _, err := client.Transfer.Unapproved(ctx, &TransferUnapprovedRequest{})
-	if err != nil {
-		t.Errorf("Transfer.Unapproved() returned error: %v", err)
-	}
-	if want, got := 2, len(payload.Results); want != got {
-		t.Errorf("Transfer.Unapproved() len(Results) %v, want %v", got, want)
-	}
+	assert.NilError(t, err)
+	assert.Equal(t, len(payload.Results), 2)
 }
 
 func TestTransfer_Status(t *testing.T) {
@@ -110,10 +96,6 @@ func TestTransfer_Status(t *testing.T) {
 	})
 
 	payload, _, err := client.Transfer.Status(ctx, "52dd0c01-e803-423a-be5f-b592b5d5d61c")
-	if err != nil {
-		t.Errorf("Transfer.Status() returned error: %v", err)
-	}
-
 	assert.NilError(t, err)
 	assert.DeepEqual(t, &TransferStatusResponse{
 		ID:           "52dd0c01-e803-423a-be5f-b592b5d5d61c",
@@ -140,10 +122,6 @@ func TestTransfer_Hide(t *testing.T) {
 	})
 
 	payload, _, err := client.Transfer.Hide(ctx, "52dd0c01-e803-423a-be5f-b592b5d5d61c")
-	if err != nil {
-		t.Errorf("Transfer.Hide() returned error: %v", err)
-	}
-
 	assert.NilError(t, err)
 	assert.DeepEqual(t, &TransferHideResponse{
 		Removed: true,

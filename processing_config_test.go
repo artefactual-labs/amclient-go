@@ -3,8 +3,9 @@ package amclient
 import (
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestProcessingConfig_Get(t *testing.T) {
@@ -26,13 +27,8 @@ func TestProcessingConfig_Get(t *testing.T) {
 	})
 
 	payload, _, err := client.ProcessingConfig.Get(ctx, "default")
-	if err != nil {
-		t.Fatalf("ProcessingConfig.Get returned error: %v", err)
-	}
-
-	if want, got := document, payload.String(); want != got {
-		t.Fatalf("ProcessingConfig.Get: Document = %v, want %v", got, want)
-	}
+	assert.NilError(t, err)
+	assert.Equal(t, payload.String(), document)
 }
 
 func TestProcessingConfig_List(t *testing.T) {
@@ -45,11 +41,6 @@ func TestProcessingConfig_List(t *testing.T) {
 	})
 
 	payload, _, err := client.ProcessingConfig.List(ctx)
-	if err != nil {
-		t.Fatalf("ProcessingConfig.List returned error: %v", err)
-	}
-
-	if want, got := []string{"automated", "default"}, payload; !reflect.DeepEqual(want, got) {
-		t.Fatalf("ProcessingConfig.Get: got = %v, want %v", got, want)
-	}
+	assert.NilError(t, err)
+	assert.DeepEqual(t, payload, []string{"automated", "default"})
 }

@@ -23,14 +23,11 @@ func TestPackage_Create(t *testing.T) {
 
 	mux.HandleFunc("/api/v2beta/package/", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		if _, ok := r.Header["Idempotency-Key"]; ok {
-			t.Error("unexpected Idempotency-Key header")
-		}
+		_, ok := r.Header["Idempotency-Key"]
+		assert.Assert(t, !ok)
 
 		blob, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NilError(t, err)
 		defer r.Body.Close()
 
 		assert.DeepEqual(t,
@@ -49,12 +46,10 @@ func TestPackage_Create(t *testing.T) {
 		ProcessingConfig: "automated",
 		AutoApprove:      &autoApprove,
 	}
-	payload, _, _ := client.Package.Create(ctx, req)
+	payload, _, err := client.Package.Create(ctx, req)
+	assert.NilError(t, err)
 	assert.Equal(t, req.Path, path)
-
-	if want, got := "096a284d-5067-4de0-a0a4-a684018cd6df", payload.ID; want != got {
-		t.Errorf("Package.Create() id: got %v, want %v", got, want)
-	}
+	assert.Equal(t, payload.ID, "096a284d-5067-4de0-a0a4-a684018cd6df")
 }
 
 func TestPackage_CreateWithIdempotencyKey(t *testing.T) {
@@ -71,9 +66,7 @@ func TestPackage_CreateWithIdempotencyKey(t *testing.T) {
 		assert.Equal(t, r.Header.Get("Idempotency-Key"), "transfer-submission-123")
 
 		blob, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NilError(t, err)
 		defer r.Body.Close()
 
 		assert.DeepEqual(t,
@@ -111,9 +104,7 @@ func TestPackage_CreateWithoutAutoApprove(t *testing.T) {
 		testMethod(t, r, "POST")
 
 		blob, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.NilError(t, err)
 		defer r.Body.Close()
 
 		assert.DeepEqual(t,

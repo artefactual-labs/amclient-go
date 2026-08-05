@@ -1,14 +1,12 @@
 package amclient
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -33,9 +31,8 @@ func teardown() {
 }
 
 func testMethod(t *testing.T, r *http.Request, expected string) {
-	if expected != r.Method {
-		t.Errorf("Request method = %v, expected %v", r.Method, expected)
-	}
+	t.Helper()
+	assert.Equal(t, r.Method, expected)
 }
 
 func TestDo(t *testing.T) {
@@ -47,23 +44,17 @@ func TestDo(t *testing.T) {
 	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if m := "GET"; m != r.Method {
-			t.Errorf("Request method = %v, expected %v", r.Method, m)
-		}
+		testMethod(t, r, "GET")
 		fmt.Fprint(w, `{"A":"a"}`)
 	})
 
-	req, _ := client.NewRequest(ctx, "GET", "/", nil)
+	req, err := client.NewRequest(ctx, "GET", "/", nil)
+	assert.NilError(t, err)
 	body := new(foo)
-	_, err := client.Do(context.Background(), req, body)
-	if err != nil {
-		t.Fatalf("Do(): %v", err)
-	}
+	_, err = client.Do(context.Background(), req, body)
+	assert.NilError(t, err)
 
-	expected := &foo{"a"}
-	if !reflect.DeepEqual(body, expected) {
-		t.Errorf("Response body = %v, expected %v", body, expected)
-	}
+	assert.DeepEqual(t, body, &foo{"a"})
 }
 
 func TestDo_httpError(t *testing.T) {
@@ -74,24 +65,18 @@ func TestDo_httpError(t *testing.T) {
 		http.Error(w, "Bad Request", 400)
 	})
 
-	req, _ := client.NewRequest(ctx, "GET", "/", nil)
-	_, err := client.Do(context.Background(), req, nil)
-
-	if err == nil {
-		t.Error("Expected HTTP 400 error.")
-	}
+	req, err := client.NewRequest(ctx, "GET", "/", nil)
+	assert.NilError(t, err)
+	_, err = client.Do(context.Background(), req, nil)
+	assert.Assert(t, err != nil)
 }
 
 func TestCustomUserAgent(t *testing.T) {
 	c, err := New(nil, "http://127.0.0.1", "", "", SetUserAgent("testing"))
-	if err != nil {
-		t.Fatalf("New() unexpected error: %v", err)
-	}
+	assert.NilError(t, err)
 
 	expected := fmt.Sprintf("%s+%s", "testing", userAgent)
-	if got := c.UserAgent; got != expected {
-		t.Errorf("New() UserAgent = %s; expected %s", got, expected)
-	}
+	assert.Equal(t, c.UserAgent, expected)
 }
 
 func TestNewRequest(t *testing.T) {
@@ -101,26 +86,22 @@ func TestNewRequest(t *testing.T) {
 		password = "Pa33w0rd"
 	)
 
-	c, _ := New(nil, baseURL, user, password)
+	c, err := New(nil, baseURL, user, password)
+	assert.NilError(t, err)
 
 	inURL, outURL := "/foo", baseURL+"/foo"
 	inBody := &TransferStartRequest{Name: "My transfer", Type: "standard"}
-	req, _ := c.NewRequest(context.Background(), "GET", inURL, inBody)
+	req, err := c.NewRequest(context.Background(), "GET", inURL, inBody)
+	assert.NilError(t, err)
 
 	// Test that relative URL was expanded.
-	if got, want := req.URL.String(), outURL; got != want {
-		t.Errorf("NewRequest(%q) URL is %v, want %v", inURL, got, want)
-	}
+	assert.Equal(t, req.URL.String(), outURL)
 
 	// Test that default user-agent is attached to the request.
-	if got, want := req.Header.Get("User-Agent"), c.UserAgent; got != want {
-		t.Errorf("NewRequest() User-Agent is %v, want %v", got, want)
-	}
+	assert.Equal(t, req.Header.Get("User-Agent"), c.UserAgent)
 
 	// Test that the Authorization header is included.
-	if got, want := req.Header.Get("Authorization"), fmt.Sprintf("ApiKey %s:%s", user, password); got != want {
-		t.Fatalf("NewRequest() Authorization header: %v, want %v", got, want)
-	}
+	assert.Equal(t, req.Header.Get("Authorization"), fmt.Sprintf("ApiKey %s:%s", user, password))
 }
 
 func TestNewRequestJSON(t *testing.T) {
@@ -130,25 +111,24 @@ func TestNewRequestJSON(t *testing.T) {
 		password = "Pa33w0rd"
 	)
 
-	c, _ := New(nil, baseURL, user, password)
+	c, err := New(nil, baseURL, user, password)
+	assert.NilError(t, err)
 
 	inBody := struct {
 		Test string `json:"string"`
 	}{Test: "foobar"}
-	req, _ := c.NewRequestJSON(context.Background(), "GET", "/foo", inBody)
+	req, err := c.NewRequestJSON(context.Background(), "GET", "/foo", inBody)
+	assert.NilError(t, err)
 
 	// Test that the Authorization header is included.
-	if got, want := req.Header.Get("Content-Type"), mediaTypeJSON; got != want {
-		t.Fatalf("NewRequest() Content-Type header: %v, want %v", got, want)
-	}
+	assert.Equal(t, req.Header.Get("Content-Type"), mediaTypeJSON)
 
-	got, _ := io.ReadAll(req.Body)
+	got, err := io.ReadAll(req.Body)
+	assert.NilError(t, err)
 	want := []byte(`{"string":"foobar"}
 `)
 	defer req.Body.Close()
-	if !bytes.Equal(got, want) {
-		t.Fatalf("NewRequest() Body, got: %s, want %s", got, want)
-	}
+	assert.DeepEqual(t, got, want)
 }
 
 func TestAddOption(t *testing.T) {
