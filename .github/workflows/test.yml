@@ -13,6 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Keep this matrix aligned with the Go support policy in README.md.
         gover:
           - "1.25.x"
           - "1.26.x"
