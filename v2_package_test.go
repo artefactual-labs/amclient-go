@@ -16,8 +16,9 @@ func TestPackage_Create(t *testing.T) {
 	defer teardown()
 
 	var (
-		path    = "<uuid>:<path>"
-		pathb64 = base64.StdEncoding.EncodeToString([]byte(path))
+		path        = "<uuid>:<path>"
+		pathb64     = base64.StdEncoding.EncodeToString([]byte(path))
+		autoApprove = true
 	)
 
 	mux.HandleFunc("/api/v2beta/package/", func(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +47,7 @@ func TestPackage_Create(t *testing.T) {
 		Accession:        "12345",
 		AccessSystemID:   "fig-123",
 		ProcessingConfig: "automated",
-		AutoApprove:      true,
+		AutoApprove:      &autoApprove,
 	}
 	payload, _, _ := client.Package.Create(ctx, req)
 	assert.Equal(t, req.Path, path)
@@ -94,4 +95,43 @@ func TestPackage_CreateWithIdempotencyKey(t *testing.T) {
 		assert.Equal(t, payload.ID, "096a284d-5067-4de0-a0a4-a684018cd6df")
 		assert.Equal(t, req.Path, path)
 	}
+}
+
+func TestPackage_CreateWithoutAutoApprove(t *testing.T) {
+	setup()
+	defer teardown()
+
+	var (
+		path        = "<uuid>:<path>"
+		pathb64     = base64.StdEncoding.EncodeToString([]byte(path))
+		autoApprove = false
+	)
+
+	mux.HandleFunc("/api/v2beta/package/", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+
+		blob, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer r.Body.Close()
+
+		assert.DeepEqual(t,
+			string(bytes.TrimSpace(blob)),
+			fmt.Sprintf(`{"name":"Foobar","type":"standard","path":"%s","auto_approve":false}`, pathb64))
+
+		fmt.Fprint(w, `{"id": "096a284d-5067-4de0-a0a4-a684018cd6df"}`)
+	})
+
+	req := &PackageCreateRequest{
+		Name:        "Foobar",
+		Type:        "standard",
+		Path:        path,
+		AutoApprove: &autoApprove,
+	}
+
+	payload, _, err := client.Package.Create(ctx, req)
+	assert.NilError(t, err)
+	assert.Equal(t, payload.ID, "096a284d-5067-4de0-a0a4-a684018cd6df")
+	assert.Equal(t, req.Path, path)
 }
