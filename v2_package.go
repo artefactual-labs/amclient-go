@@ -27,6 +27,7 @@ type PackageCreateRequest struct {
 	MetadataSetID    string `json:"metadata_set_id,omitempty"`
 	ProcessingConfig string `json:"processing_config,omitempty"`
 	AutoApprove      bool   `json:"auto_approve,omitempty"`
+	IdempotencyKey   string `json:"-"`
 }
 
 type PackageCreateResponse struct {
@@ -36,15 +37,19 @@ type PackageCreateResponse struct {
 func (s *PackageServiceOp) Create(ctx context.Context, r *PackageCreateRequest) (*PackageCreateResponse, *Response, error) {
 	path := fmt.Sprintf("%s/", packageBasePath)
 
-	r.Path = base64.StdEncoding.EncodeToString([]byte(r.Path))
+	payload := *r
+	payload.Path = base64.StdEncoding.EncodeToString([]byte(r.Path))
 
-	req, err := s.client.NewRequestJSON(ctx, "POST", path, r)
+	req, err := s.client.NewRequestJSON(ctx, "POST", path, &payload)
 	if err != nil {
 		return nil, nil, err
 	}
+	if r.IdempotencyKey != "" {
+		req.Header.Set("Idempotency-Key", r.IdempotencyKey)
+	}
 
-	payload := &PackageCreateResponse{}
-	resp, err := s.client.Do(ctx, req, payload)
+	result := &PackageCreateResponse{}
+	resp, err := s.client.Do(ctx, req, result)
 
-	return payload, resp, err
+	return result, resp, err
 }
